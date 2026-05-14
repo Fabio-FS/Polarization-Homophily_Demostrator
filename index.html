@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Behavioral structure and epidemic spread: interactive demonstrator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg-page: #1c1c1a;
+    --bg-card: #262624;
+    --bg-panel: #2f2f2c;
+    --bg-input: #1c1c1a;
+    --text-primary: #f0eee6;
+    --text-secondary: #b3b1a8;
+    --text-tertiary: #8a8880;
+    --border: rgba(240, 238, 230, 0.12);
+    --border-strong: rgba(240, 238, 230, 0.22);
+    --accent-blue: #4a9eff;
+    --accent-orange: #e88a5f;
+    --accent-green: #6dbf6d;
+    --accent-pink: #d96a8f;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1rem 3rem;
+  }
+
+  header { margin-bottom: 1.5rem; }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .byline {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 1rem;
+  }
+
+  .intro {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .container {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+  }
+
+  .plot-panel {
+    background: var(--bg-panel);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+  }
+
+  label {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .panel-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  select {
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 18px;
+    width: 100%;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--bg-input);
+    border-radius: 2px;
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px;
+    background: var(--bg-input);
+    border-radius: 2px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    margin-top: -6px;
+    border: none;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    border: none;
+  }
+
+  button {
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover { background: var(--bg-panel); }
+  button:active { transform: scale(0.98); }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 21px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .slider-grid {
+    display: grid;
+    grid-template-columns: minmax(160px, auto) 1fr auto;
+    gap: 10px 14px;
+    align-items: center;
+  }
+  .slider-grid-narrow {
+    display: grid;
+    grid-template-columns: minmax(80px, auto) 1fr auto;
+    gap: 10px 10px;
+    align-items: center;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+  .matrix-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 8px;
+    align-items: center;
+  }
+  .it-box {
+    text-align: center;
+  }
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+  .slider-out {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 42px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .preview-card {
+    background: var(--bg-panel);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.6rem;
+  }
+  .preview-title {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .button-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .button-row button { flex: 1; }
+
+  .footer {
+    margin-top: 1.5rem;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    line-height: 1.7;
+  }
+  .footer a { color: var(--accent-blue); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  .plot-caption {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  svg text { font-family: 'Inter', sans-serif; }
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <header>
+    <h1>Behavioral structure and epidemic spread</h1>
+    <p class="byline">Interactive demonstrator. Set the population fractions in each behavior group, then watch the epidemic.</p>
+    <p class="intro">
+      The population is split into 5 behavior groups, from no protective behavior (group 1) to maximal (group 5). Each group's transmission, recovery, or vaccination rate is set by its group index. Use the sliders to reshape the population, change homophily <i>h</i> (how strongly people mix with similar others), and tune the baseline reproduction number R<sub>0</sub><sup>*</sup>.
+    </p>
+  </header>
+
+  <div class="container">
+
+    <div class="top-row">
+      <div>
+        <label for="intervention" style="color: var(--text-secondary); font-size: 13px;">Intervention</label>
+        &nbsp;
+        <select id="intervention">
+          <option value="M">SIR-M (mask-wearing)</option>
+          <option value="T">SIR-T (testing)</option>
+          <option value="V">SIR-V (vaccination)</option>
+        </select>
+      </div>
+      <button id="btn-reset">Reset to uniform</button>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-title">Drag bar tops to set the fraction in each behavior group (auto-renormalizes to 1)</div>
+        <svg id="hist" viewBox="0 0 360 200" style="width: 100%; height: auto; display: block; touch-action: none;" xmlns="http://www.w3.org/2000/svg">
+          <g id="hist-grid"></g>
+          <g id="hist-bars"></g>
+          <g id="hist-axes"></g>
+          <g id="hist-handles"></g>
+        </svg>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Epidemic and mixing</div>
+        <div class="slider-grid-narrow">
+          <label>Homophily &nbsp;<i>h</i></label>
+          <input type="range" id="slider-h" min="0" max="6" step="0.1" value="0"/>
+          <span id="out-h" class="slider-out">0.0</span>
+
+          <label>R<sub>0</sub><sup>*</sup> &nbsp;(baseline)</label>
+          <input type="range" id="slider-R0" min="0.5" max="5" step="0.1" value="2.5"/>
+          <span id="out-R0" class="slider-out">2.5</span>
+        </div>
+        <div style="margin-top: 0.75rem;">
+          <div class="panel-title" style="margin-bottom: 4px;">Contact matrix C<sub>ij</sub></div>
+          <div class="matrix-row">
+            <svg id="preview-mat" viewBox="0 0 200 160" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div class="it-box">
+              <div class="stat-label">Final I<sub>T</sub></div>
+              <div class="stat-value" id="stat-it-top" style="color: var(--accent-orange); font-size: 28px;">0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="plot-panel" style="margin-bottom: 12px;">
+      <div class="plot-caption">Infected per behavior group I<sub>i</sub>(t)</div>
+      <svg id="plot-groups" viewBox="0 0 660 280" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+        <g id="grp-grid"></g>
+        <g id="grp-axes"></g>
+        <g id="grp-curves"></g>
+        <g id="grp-legend"></g>
+      </svg>
+    </div>
+
+    <div class="plot-panel">
+      <div class="plot-caption">Total S, I, R over time</div>
+      <svg id="plot-sir" viewBox="0 0 660 280" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg">
+        <g id="sir-grid"></g>
+        <g id="sir-axes"></g>
+        <path id="sir-S" fill="none" stroke="#b3b1a8" stroke-width="2"/>
+        <path id="sir-I" fill="none" stroke="#e88a5f" stroke-width="2.5"/>
+        <path id="sir-R" fill="none" stroke="#6d8eff" stroke-width="2"/>
+        <g id="sir-legend"></g>
+      </svg>
+    </div>
+
+    <div class="button-row">
+      <button id="btn-consensus">Consensus (p=0)</button>
+      <button id="btn-uniform">Uniform (p=0.5)</button>
+      <button id="btn-polarized">Maximally polarized (p=1)</button>
+      <button id="btn-empirical">Empirical (Germany)</button>
+    </div>
+
+    <div class="stat-grid" style="margin-top: 1rem; margin-bottom: 0;">
+      <div class="panel">
+        <div class="stat-label">Mean compliance μ</div>
+        <div class="stat-value" id="stat-mu">0.50</div>
+      </div>
+      <div class="panel">
+        <div class="stat-label">Polarization p</div>
+        <div class="stat-value" id="stat-p">0.00</div>
+      </div>
+      <div class="panel">
+        <div class="stat-label">Homophily h</div>
+        <div class="stat-value" id="stat-h">0.0</div>
+      </div>
+      <div class="panel">
+        <div class="stat-label">Final I<sub>T</sub></div>
+        <div class="stat-value" id="stat-it" style="color: var(--accent-orange);">0.00</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    5 behavior groups with linearly increasing compliance. SIR-M: θ<sub>max</sub>=0.8. SIR-T: τ<sub>max</sub>=0.198 (two tests/week at 69.3% sensitivity). SIR-V: ξ<sub>max</sub>=0.01/day. Contact matrix C<sub>ij</sub> ∝ exp(−h|i−j|/(N−1)), normalized to preserve group sizes and total contact volume. γ=0.1/day, simulated for 360 days. Based on Sartori et al., <i>Beyond Averages</i>.
+  </div>
+
+</div>
+
+<script>
+(function() {
+
+  // === Model parameters (from the paper) ===
+  const N = 5;                  // number of behavior groups
+  const gamma = 0.1;            // baseline recovery rate
+  const T = 360;                // simulation time (days)
+  const dt = 0.5;
+  const nSteps = Math.round(T / dt);
+
+  const theta_max = 0.8;        // SIR-M
+  const tau_max   = 0.198;      // SIR-T
+  const xi_max    = 0.01;       // SIR-V
+
+  // Color palettes per intervention (matching the paper convention)
+  const palettes = {
+    M: ['#cfe1ff', '#9fc1ff', '#6d9ff5', '#3f7ad9', '#1f4fa5'], // blues for SIR-M
+    T: ['#f7d4d9', '#eda6b3', '#d96a8f', '#b53e6e', '#7a1f48'], // pinks/reds for SIR-T
+    V: ['#cde8c4', '#9bcd8d', '#6dbf6d', '#3f8d3f', '#1f5a1f'], // greens for SIR-V
+  };
+
+  // === State ===
+  let intervention = 'M';
+  let n = [0.2, 0.2, 0.2, 0.2, 0.2];  // population fractions (always sum to 1)
+  let h = 0.0;
+  let R0_star = 2.5;
+
+  // Empirical values from the survey (Fig 3 captions and bin heights)
+  const empirical = {
+    M: { mu: 0.77, p: 0.28, h: 2.83, dist: [0.03161765, 0.07647059, 0.09926471, 0.36029412, 0.43235294] },
+    T: { mu: 0.47, p: 0.48, h: 2.32, dist: [0.18308824, 0.30000000, 0.15073529, 0.18676471, 0.17941176] },
+    V: { mu: 0.61, p: 0.57, h: 2.05, dist: [0.18897059, 0.10367647, 0.12720588, 0.22794118, 0.35220588] },
+  };
+
+  // === Derived quantities ===
+
+  // Compliance level x_i for group i (linearly from 0 to 1)
+  function x_i(i) { return i / (N - 1); }
+
+  // Behavior-specific parameter vectors
+  function theta_vec() { const v = []; for (let i = 0; i < N; i++) v.push(theta_max * x_i(i)); return v; }
+  function tau_vec()   { const v = []; for (let i = 0; i < N; i++) v.push(tau_max   * x_i(i)); return v; }
+  function xi_vec()    { const v = []; for (let i = 0; i < N; i++) v.push(xi_max    * x_i(i)); return v; }
+
+  // Mean compliance and polarization (matches paper definitions)
+  function mean_compliance() {
+    let m = 0;
+    for (let i = 0; i < N; i++) m += n[i] * x_i(i);
+    return m;
+  }
+  function polarization() {
+    const m = mean_compliance();
+    let v = 0;
+    for (let i = 0; i < N; i++) v += n[i] * (x_i(i) - m) * (x_i(i) - m);
+    return 4 * v;
+  }
+
+  // Contact matrix: C_ij proportional to exp(-h |i-j|/(N-1))
+  // Normalized so that sum_j n_j * C_ij = 1 (preserves total contact volume per person)
+  function contact_matrix() {
+    const C = [];
+    for (let i = 0; i < N; i++) {
+      const row = [];
+      let row_sum = 0;
+      for (let j = 0; j < N; j++) {
+        const c = Math.exp(-h * Math.abs(i - j) / (N - 1));
+        row.push(c);
+        row_sum += n[j] * c;
+      }
+      // normalize so sum_j n_j C_ij = 1
+      for (let j = 0; j < N; j++) row[j] = row[j] / row_sum;
+      C.push(row);
+    }
+    return C;
+  }
+
+  // === Simulation ===
+
+  function simulate() {
+    const C = contact_matrix();
+    const theta = theta_vec();
+    const tau   = tau_vec();
+    const xi    = xi_vec();
+    const beta_M = R0_star * gamma;
+
+    // Initial conditions: small seed I_0 distributed proportional to n_i
+    const I0 = 1e-4;
+    const S = new Array(N);
+    const I = new Array(N);
+    const R = new Array(N);
+    const V = new Array(N);
+    for (let i = 0; i < N; i++) {
+      S[i] = n[i] * (1 - I0);
+      I[i] = n[i] * I0;
+      R[i] = 0;
+      V[i] = 0;
+    }
+
+    // Storage of totals over time
+    const S_tot = new Float64Array(nSteps + 1);
+    const I_tot = new Float64Array(nSteps + 1);
+    const R_tot = new Float64Array(nSteps + 1);
+    // Storage of per-group I_i over time
+    const I_grp = [];
+    for (let i = 0; i < N; i++) I_grp.push(new Float64Array(nSteps + 1));
+
+    function snapshot(k) {
+      let s = 0, ii = 0, r = 0;
+      for (let i = 0; i < N; i++) {
+        s += S[i];
+        ii += I[i];
+        r += R[i] + V[i];
+        I_grp[i][k] = I[i];
+      }
+      S_tot[k] = s;
+      I_tot[k] = ii;
+      R_tot[k] = r;
+    }
+    snapshot(0);
+
+    // SIR-M: β_i = β_M (1 − θ_i)
+    // SIR-T: γ_i = γ + τ_i
+    // SIR-V: ξ_i removes susceptibles
+    for (let k = 0; k < nSteps; k++) {
+      // compute force of infection per group
+      const lambda = new Array(N).fill(0);
+      for (let i = 0; i < N; i++) {
+        let s = 0;
+        for (let j = 0; j < N; j++) s += C[i][j] * I[j];
+        lambda[i] = s;
+      }
+      for (let i = 0; i < N; i++) {
+        const beta_i  = (intervention === 'M') ? beta_M * (1 - theta[i]) : beta_M;
+        const gamma_i = (intervention === 'T') ? gamma + tau[i]           : gamma;
+        const xi_i    = (intervention === 'V') ? xi[i]                    : 0;
+
+        const new_inf = beta_i * S[i] * lambda[i];
+        const new_rec = gamma_i * I[i];
+        const new_vac = xi_i * S[i];
+
+        const dS = -new_inf - new_vac;
+        const dI = +new_inf - new_rec;
+        const dR = +new_rec;
+        const dV = +new_vac;
+
+        S[i] += dS * dt;
+        I[i] += dI * dt;
+        R[i] += dR * dt;
+        V[i] += dV * dt;
+      }
+      snapshot(k + 1);
+    }
+
+    return { S_tot, I_tot, R_tot, I_grp };
+  }
+
+  // === Plotting helpers ===
+
+  function buildPath(xs, ys) {
+    let d = '';
+    for (let i = 0; i < xs.length; i++) {
+      d += (i === 0 ? 'M' : 'L') + xs[i].toFixed(1) + ',' + ys[i].toFixed(1) + ' ';
+    }
+    return d;
+  }
+
+  // ===== Main SIR plot =====
+
+  const sirSvg   = document.getElementById('plot-sir');
+  const sirGrid  = document.getElementById('sir-grid');
+  const sirAxes  = document.getElementById('sir-axes');
+  const sirLeg   = document.getElementById('sir-legend');
+  const sirPathS = document.getElementById('sir-S');
+  const sirPathI = document.getElementById('sir-I');
+  const sirPathR = document.getElementById('sir-R');
+
+  const Wsir = 660, Hsir = 280;
+  const padSir = { l: 50, r: 20, t: 20, b: 40 };
+  const plotWsir = Wsir - padSir.l - padSir.r;
+  const plotHsir = Hsir - padSir.t - padSir.b;
+
+  function sirTx(t) { return padSir.l + (t / T) * plotWsir; }
+  function sirTy(y) { return padSir.t + (1 - y) * plotHsir; }
+
+  function drawSirAxes() {
+    let g = '';
+    for (let i = 0; i <= 4; i++) {
+      const y = padSir.t + (i / 4) * plotHsir;
+      g += `<line x1="${padSir.l}" y1="${y}" x2="${padSir.l + plotWsir}" y2="${y}" stroke="rgba(240,238,230,0.10)" stroke-width="0.5"/>`;
+    }
+    sirGrid.innerHTML = g;
+
+    let s = '';
+    s += `<line x1="${padSir.l}" y1="${padSir.t + plotHsir}" x2="${padSir.l + plotWsir}" y2="${padSir.t + plotHsir}" stroke="#b3b1a8" stroke-width="1"/>`;
+    s += `<line x1="${padSir.l}" y1="${padSir.t}" x2="${padSir.l}" y2="${padSir.t + plotHsir}" stroke="#b3b1a8" stroke-width="1"/>`;
+    for (let i = 0; i <= 4; i++) {
+      const v = i / 4;
+      const y = sirTy(v);
+      s += `<text x="${padSir.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#b3b1a8">${v.toFixed(2)}</text>`;
+    }
+    for (let i = 0; i <= 6; i++) {
+      const t = (i / 6) * T;
+      const x = sirTx(t);
+      s += `<line x1="${x}" y1="${padSir.t + plotHsir}" x2="${x}" y2="${padSir.t + plotHsir + 4}" stroke="#b3b1a8" stroke-width="1"/>`;
+      s += `<text x="${x}" y="${padSir.t + plotHsir + 18}" text-anchor="middle" font-size="11" fill="#b3b1a8">${Math.round(t)}</text>`;
+    }
+    s += `<text x="${padSir.l + plotWsir / 2}" y="${Hsir - 6}" text-anchor="middle" font-size="12" fill="#b3b1a8">time (days)</text>`;
+    s += `<text x="14" y="${padSir.t + plotHsir / 2}" text-anchor="middle" font-size="12" fill="#b3b1a8" transform="rotate(-90 14 ${padSir.t + plotHsir / 2})">population fraction</text>`;
+    sirAxes.innerHTML = s;
+
+    // legend (R label is "R+V" for SIR-V case but kept as R for simplicity)
+    let L = '';
+    const lx = padSir.l + plotWsir - 110;
+    const ly = padSir.t + 8;
+    L += `<rect x="${lx - 8}" y="${ly - 4}" width="110" height="58" fill="rgba(28,28,26,0.7)" stroke="rgba(240,238,230,0.15)" stroke-width="0.5" rx="4"/>`;
+    L += `<line x1="${lx}" y1="${ly + 6}" x2="${lx + 18}" y2="${ly + 6}" stroke="#b3b1a8" stroke-width="2"/>`;
+    L += `<text x="${lx + 24}" y="${ly + 10}" font-size="11" fill="#b3b1a8">S (susceptible)</text>`;
+    L += `<line x1="${lx}" y1="${ly + 22}" x2="${lx + 18}" y2="${ly + 22}" stroke="#e88a5f" stroke-width="2.5"/>`;
+    L += `<text x="${lx + 24}" y="${ly + 26}" font-size="11" fill="#b3b1a8">I (infected)</text>`;
+    L += `<line x1="${lx}" y1="${ly + 38}" x2="${lx + 18}" y2="${ly + 38}" stroke="#6d8eff" stroke-width="2"/>`;
+    L += `<text x="${lx + 24}" y="${ly + 42}" font-size="11" fill="#b3b1a8">R + V</text>`;
+    sirLeg.innerHTML = L;
+  }
+
+  function drawSir(sim) {
+    const stride = Math.max(1, Math.floor(sim.S_tot.length / 300));
+    const xs = [], ysS = [], ysI = [], ysR = [];
+    for (let k = 0; k < sim.S_tot.length; k += stride) {
+      xs.push(sirTx(k * dt));
+      ysS.push(sirTy(sim.S_tot[k]));
+      ysI.push(sirTy(sim.I_tot[k]));
+      ysR.push(sirTy(sim.R_tot[k]));
+    }
+    sirPathS.setAttribute('d', buildPath(xs, ysS));
+    sirPathI.setAttribute('d', buildPath(xs, ysI));
+    sirPathR.setAttribute('d', buildPath(xs, ysR));
+  }
+
+  // ===== Per-group I_i plot =====
+
+  const grpGrid    = document.getElementById('grp-grid');
+  const grpAxes    = document.getElementById('grp-axes');
+  const grpCurves  = document.getElementById('grp-curves');
+  const grpLegend  = document.getElementById('grp-legend');
+
+  const Wgrp = 660, Hgrp = 280;
+  const padGrp = { l: 50, r: 20, t: 20, b: 40 };
+  const plotWgrp = Wgrp - padGrp.l - padGrp.r;
+  const plotHgrp = Hgrp - padGrp.t - padGrp.b;
+
+  function grpTx(t) { return padGrp.l + (t / T) * plotWgrp; }
+
+  function drawGrpAxes(ymax) {
+    let g = '';
+    for (let i = 0; i <= 4; i++) {
+      const y = padGrp.t + (i / 4) * plotHgrp;
+      g += `<line x1="${padGrp.l}" y1="${y}" x2="${padGrp.l + plotWgrp}" y2="${y}" stroke="rgba(240,238,230,0.10)" stroke-width="0.5"/>`;
+    }
+    grpGrid.innerHTML = g;
+
+    let s = '';
+    s += `<line x1="${padGrp.l}" y1="${padGrp.t + plotHgrp}" x2="${padGrp.l + plotWgrp}" y2="${padGrp.t + plotHgrp}" stroke="#b3b1a8" stroke-width="1"/>`;
+    s += `<line x1="${padGrp.l}" y1="${padGrp.t}" x2="${padGrp.l}" y2="${padGrp.t + plotHgrp}" stroke="#b3b1a8" stroke-width="1"/>`;
+    for (let i = 0; i <= 4; i++) {
+      const v = (i / 4) * ymax;
+      const y = padGrp.t + (1 - i / 4) * plotHgrp;
+      s += `<text x="${padGrp.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="#b3b1a8">${v.toFixed(3)}</text>`;
+    }
+    for (let i = 0; i <= 6; i++) {
+      const t = (i / 6) * T;
+      const x = grpTx(t);
+      s += `<line x1="${x}" y1="${padGrp.t + plotHgrp}" x2="${x}" y2="${padGrp.t + plotHgrp + 4}" stroke="#b3b1a8" stroke-width="1"/>`;
+      s += `<text x="${x}" y="${padGrp.t + plotHgrp + 18}" text-anchor="middle" font-size="11" fill="#b3b1a8">${Math.round(t)}</text>`;
+    }
+    s += `<text x="${padGrp.l + plotWgrp / 2}" y="${Hgrp - 6}" text-anchor="middle" font-size="12" fill="#b3b1a8">time (days)</text>`;
+    s += `<text x="14" y="${padGrp.t + plotHgrp / 2}" text-anchor="middle" font-size="12" fill="#b3b1a8" transform="rotate(-90 14 ${padGrp.t + plotHgrp / 2})">I_i(t)</text>`;
+    grpAxes.innerHTML = s;
+
+    // legend (groups 1..5, current palette)
+    const colors = palettes[intervention];
+    let L = '';
+    const lx = padGrp.l + plotWgrp - 80;
+    const ly = padGrp.t + 8;
+    L += `<rect x="${lx - 8}" y="${ly - 4}" width="80" height="92" fill="rgba(28,28,26,0.7)" stroke="rgba(240,238,230,0.15)" stroke-width="0.5" rx="4"/>`;
+    for (let i = 0; i < N; i++) {
+      const yy = ly + 6 + i * 16;
+      L += `<line x1="${lx}" y1="${yy}" x2="${lx + 18}" y2="${yy}" stroke="${colors[i]}" stroke-width="2.5"/>`;
+      L += `<text x="${lx + 24}" y="${yy + 4}" font-size="11" fill="#b3b1a8">Group ${i + 1}</text>`;
+    }
+    grpLegend.innerHTML = L;
+  }
+
+  function drawGrp(sim) {
+    // pick ymax based on the largest peak across groups
+    let peak = 0;
+    for (let i = 0; i < N; i++) {
+      for (let k = 0; k < sim.I_grp[i].length; k++) {
+        if (sim.I_grp[i][k] > peak) peak = sim.I_grp[i][k];
+      }
+    }
+    let ymax = Math.max(peak * 1.15, 0.001);
+
+    drawGrpAxes(ymax);
+
+    const colors = palettes[intervention];
+    const stride = Math.max(1, Math.floor(sim.I_grp[0].length / 300));
+    let curvesStr = '';
+    for (let i = 0; i < N; i++) {
+      const xs = [], ys = [];
+      for (let k = 0; k < sim.I_grp[i].length; k += stride) {
+        xs.push(grpTx(k * dt));
+        const v = sim.I_grp[i][k] / ymax;
+        ys.push(padGrp.t + (1 - v) * plotHgrp);
+      }
+      curvesStr += `<path d="${buildPath(xs, ys)}" fill="none" stroke="${colors[i]}" stroke-width="2.5"/>`;
+    }
+    grpCurves.innerHTML = curvesStr;
+  }
+
+  // ===== Interactive behavior-distribution histogram =====
+
+  const histSvg     = document.getElementById('hist');
+  const histGrid    = document.getElementById('hist-grid');
+  const histBars    = document.getElementById('hist-bars');
+  const histAxes    = document.getElementById('hist-axes');
+  const histHandles = document.getElementById('hist-handles');
+
+  const Whist = 360, Hhist = 200;
+  const padHist = { l: 40, r: 12, t: 12, b: 36 };
+  const plotWhist = Whist - padHist.l - padHist.r;
+  const plotHhist = Hhist - padHist.t - padHist.b;
+
+  function histBy(v) { return padHist.t + (1 - v) * plotHhist; }
+
+  const barSlot = plotWhist / N;
+  const barW = barSlot * 0.7;
+  const barGap = barSlot * 0.3;
+
+  // Build the static grid + axes labels once
+  function drawHistStatic() {
+    let g = '';
+    for (let i = 0; i <= 4; i++) {
+      const y = padHist.t + (i / 4) * plotHhist;
+      g += `<line x1="${padHist.l}" y1="${y}" x2="${padHist.l + plotWhist}" y2="${y}" stroke="rgba(240,238,230,0.10)" stroke-width="0.5"/>`;
+    }
+    histGrid.innerHTML = g;
+
+    let a = '';
+    a += `<line x1="${padHist.l}" y1="${padHist.t + plotHhist}" x2="${padHist.l + plotWhist}" y2="${padHist.t + plotHhist}" stroke="#b3b1a8" stroke-width="1"/>`;
+    a += `<line x1="${padHist.l}" y1="${padHist.t}" x2="${padHist.l}" y2="${padHist.t + plotHhist}" stroke="#b3b1a8" stroke-width="1"/>`;
+    for (let i = 0; i <= 4; i++) {
+      const v = i / 4;
+      const y = histBy(v);
+      a += `<text x="${padHist.l - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#b3b1a8">${v.toFixed(2)}</text>`;
+    }
+    for (let i = 0; i < N; i++) {
+      const x = padHist.l + i * barSlot + barSlot / 2;
+      a += `<text x="${x}" y="${padHist.t + plotHhist + 14}" text-anchor="middle" font-size="10" fill="#b3b1a8">${i + 1}</text>`;
+    }
+    a += `<text x="${padHist.l + plotWhist / 2}" y="${Hhist - 6}" text-anchor="middle" font-size="11" fill="#b3b1a8">behavior group  →  more protection</text>`;
+    a += `<text x="12" y="${padHist.t + plotHhist / 2}" text-anchor="middle" font-size="11" fill="#b3b1a8" transform="rotate(-90 12 ${padHist.t + plotHhist / 2})">fraction n<tspan font-size="9">i</tspan></text>`;
+    histAxes.innerHTML = a;
+  }
+
+  // Build bar rects and drag hit zones once; we then mutate their attributes on redraw
+  function buildHistNodes() {
+    let b = '';
+    for (let i = 0; i < N; i++) {
+      const x = padHist.l + i * barSlot + barGap / 2;
+      b += `<rect class="hbar" data-idx="${i}" x="${x}" y="${padHist.t + plotHhist}" width="${barW}" height="0" fill="#888" rx="2"/>`;
+    }
+    histBars.innerHTML = b;
+
+    let hh = '';
+    for (let i = 0; i < N; i++) {
+      const x = padHist.l + i * barSlot;
+      const capX = padHist.l + i * barSlot + barGap / 2;
+      // wide invisible hit zone over the full vertical strip
+      hh += `<rect class="bar-drag" data-idx="${i}" x="${x}" y="${padHist.t}" width="${barSlot}" height="${plotHhist}" fill="transparent" style="cursor: ns-resize;"/>`;
+      // visible draggable cap on top of the bar
+      hh += `<rect class="hcap" data-idx="${i}" x="${capX}" y="${padHist.t + plotHhist - 3}" width="${barW}" height="6" fill="#888" stroke="#f0eee6" stroke-width="1.5" rx="1" pointer-events="none"/>`;
+    }
+    histHandles.innerHTML = hh;
+
+    // attach listeners once — they live for the lifetime of the page
+    const targets = histSvg.querySelectorAll('.bar-drag');
+    targets.forEach(t => {
+      t.addEventListener('pointerdown', (evt) => {
+        evt.preventDefault();
+        histDragIdx = parseInt(t.getAttribute('data-idx'));
+        t.setPointerCapture(evt.pointerId);
+        t.addEventListener('pointermove', onHistPointerMove);
+        t.addEventListener('pointerup', onHistPointerUp);
+        t.addEventListener('pointercancel', onHistPointerUp);
+      });
+    });
+  }
+
+  function drawHistogram() {
+    const colors = palettes[intervention];
+    // update bar fills, heights, and cap positions in place — no DOM rebuild
+    const bars = histBars.querySelectorAll('.hbar');
+    const caps = histHandles.querySelectorAll('.hcap');
+    for (let i = 0; i < N; i++) {
+      const bh = n[i] * plotHhist;
+      const y = padHist.t + plotHhist - bh;
+      bars[i].setAttribute('y', y);
+      bars[i].setAttribute('height', bh);
+      bars[i].setAttribute('fill', colors[i]);
+      caps[i].setAttribute('y', y - 3);
+      caps[i].setAttribute('fill', colors[i]);
+    }
+  }
+
+  let histDragIdx = -1;
+
+  function histSvgPoint(evt) {
+    const rect = histSvg.getBoundingClientRect();
+    const x = ((evt.clientX - rect.left) / rect.width) * Whist;
+    const y = ((evt.clientY - rect.top) / rect.height) * Hhist;
+    return { x, y };
+  }
+
+  function onHistPointerMove(evt) {
+    if (histDragIdx < 0) return;
+    evt.preventDefault();
+    const p = histSvgPoint(evt);
+    let v = 1 - (p.y - padHist.t) / plotHhist;
+    if (v < 0) v = 0;
+    if (v > 1) v = 1;
+    setNAndRenormalize(histDragIdx, v);
+    redrawAll();
+  }
+
+  function onHistPointerUp(evt) {
+    histDragIdx = -1;
+    if (evt.target.releasePointerCapture) {
+      try { evt.target.releasePointerCapture(evt.pointerId); } catch (e) {}
+    }
+  }
+
+  // ===== Contact matrix heatmap =====
+
+  function drawMatrix() {
+    const svg = document.getElementById('preview-mat');
+    const w = 200, h = 160;
+    const px = { l: 30, r: 10, t: 10, b: 30 };
+    const pw = w - px.l - px.r;
+    const ph = h - px.t - px.b;
+
+    const C = contact_matrix();
+    let cmax = 0;
+    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (C[i][j] > cmax) cmax = C[i][j];
+    if (cmax === 0) cmax = 1;
+
+    // cells are square; fit in the smaller dimension
+    const cell = Math.min(pw, ph) / N;
+    const x0 = px.l + (pw - cell * N) / 2;
+    const y0 = px.t + (ph - cell * N) / 2;
+
+    let s = '';
+    for (let i = 0; i < N; i++) {
+      for (let j = 0; j < N; j++) {
+        // map intensity to a warm dark→bright color
+        const t = C[i][j] / cmax;
+        const r = Math.round(40 + t * 215);
+        const g = Math.round(40 + t * 130);
+        const b = Math.round(30 + t * 30);
+        const col = `rgb(${r},${g},${b})`;
+        const x = x0 + j * cell;
+        const y = y0 + i * cell;
+        s += `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" fill="${col}" stroke="rgba(28,28,26,0.5)" stroke-width="0.5"/>`;
+      }
+    }
+    s += `<text x="${x0 + N * cell / 2}" y="${h - 4}" text-anchor="middle" font-size="10" fill="#b3b1a8">j (contact's group)</text>`;
+    s += `<text x="${x0 - 6}" y="${y0 + N * cell / 2}" text-anchor="middle" font-size="10" fill="#b3b1a8" transform="rotate(-90 ${x0 - 6} ${y0 + N * cell / 2})">i (own group)</text>`;
+    svg.innerHTML = s;
+  }
+
+  // === Main redraw ===
+
+  function redrawAll() {
+    // update readouts
+    document.getElementById('out-h').textContent  = h.toFixed(1);
+    document.getElementById('out-R0').textContent = R0_star.toFixed(1);
+
+    document.getElementById('stat-mu').textContent = mean_compliance().toFixed(2);
+    document.getElementById('stat-p').textContent  = polarization().toFixed(2);
+    document.getElementById('stat-h').textContent  = h.toFixed(1);
+
+    const sim = simulate();
+    drawSirAxes();
+    drawSir(sim);
+    drawGrp(sim);
+    drawHistogram();
+    drawMatrix();
+
+    const IT = sim.R_tot[sim.R_tot.length - 1];
+    document.getElementById('stat-it').textContent = IT.toFixed(2);
+    document.getElementById('stat-it-top').textContent = IT.toFixed(2);
+  }
+
+  // === Slider wiring with auto-renormalization ===
+
+  // When a user drags slider k, we set n[k] to that value, then renormalize the
+  // OTHER 4 to make the total sum to 1, preserving their relative proportions.
+  function setNAndRenormalize(k, newVal) {
+    if (newVal < 0) newVal = 0;
+    if (newVal > 1) newVal = 1;
+    const others_sum = 1 - newVal;
+    let cur_others = 0;
+    for (let i = 0; i < N; i++) if (i !== k) cur_others += n[i];
+    if (cur_others < 1e-9) {
+      const each = others_sum / (N - 1);
+      for (let i = 0; i < N; i++) n[i] = (i === k) ? newVal : each;
+    } else {
+      const scale = others_sum / cur_others;
+      for (let i = 0; i < N; i++) {
+        if (i === k) n[i] = newVal;
+        else n[i] = n[i] * scale;
+      }
+    }
+  }
+
+  // (Histogram bar drag handlers attached in drawHistogram)
+
+  document.getElementById('slider-h').addEventListener('input', (e) => {
+    h = parseFloat(e.target.value);
+    redrawAll();
+  });
+  document.getElementById('slider-R0').addEventListener('input', (e) => {
+    R0_star = parseFloat(e.target.value);
+    redrawAll();
+  });
+  document.getElementById('intervention').addEventListener('change', (e) => {
+    intervention = e.target.value;
+    redrawAll();
+  });
+
+  // === Buttons ===
+
+  function setN(arr) {
+    for (let i = 0; i < N; i++) n[i] = arr[i];
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    setN([0.2, 0.2, 0.2, 0.2, 0.2]);
+    h = 0;
+    R0_star = 2.5;
+    document.getElementById('slider-h').value = 0;
+    document.getElementById('slider-R0').value = 2.5;
+    redrawAll();
+  });
+
+  document.getElementById('btn-consensus').addEventListener('click', () => {
+    setN([0, 0, 1, 0, 0]);
+    redrawAll();
+  });
+
+  document.getElementById('btn-uniform').addEventListener('click', () => {
+    setN([0.2, 0.2, 0.2, 0.2, 0.2]);
+    redrawAll();
+  });
+
+  document.getElementById('btn-polarized').addEventListener('click', () => {
+    setN([0.5, 0, 0, 0, 0.5]);
+    redrawAll();
+  });
+
+  document.getElementById('btn-empirical').addEventListener('click', () => {
+    const emp = empirical[intervention];
+    setN(emp.dist);
+    h = emp.h;
+    document.getElementById('slider-h').value = h.toFixed(1);
+    redrawAll();
+  });
+
+  // === Initial render ===
+  drawHistStatic();
+  buildHistNodes();
+  redrawAll();
+})();
+</script>
+
+</body>
+</html>
